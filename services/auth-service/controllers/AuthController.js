@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const axios = require('axios');
 
 const generateTokens = (user) => {
   const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
@@ -75,6 +76,55 @@ exports.logout = async (req, res) => {
       await user.save();
     }
     res.json({ message: "Logout berhasil" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// untuk user ke github
+exports.githubLogin = (req, res) => {
+  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${process.env.GITHUB_REDIRECT_URI}&scope=user:email`;
+  res.redirect(url);
+};
+
+// fungsi callback untuk kode dari GitHub
+exports.githubCallback = async (req, res) => {
+  const { code } = req.query;
+  try {
+    // tukar code dengan access token gitHub
+    const tokenResponse = await axios.post('https://github.com/login/oauth/access_token', {
+      client_id: process.env.GITHUB_CLIENT_ID,
+      client_secret: process.env.GITHUB_CLIENT_SECRET,
+      code: code
+    }, { headers: { accept: 'application/json' } });
+
+    const githubToken = tokenResponse.data.access_token;
+
+    // ambil data user dari gitHub
+    const userResponse = await axios.get('https://api.github.com/user', {
+      headers: { Authorization: `token ${githubToken}` }
+    });
+
+    const { login, email, avatar_url } = userResponse.data;
+
+    // simpan nama, email, foto
+    let user = await User.findOne({ where: { email: email || `${login}@github.com` } });
+
+    if (!user) {
+      user = await User.create({
+        nama: login,
+        email: email || `${login}@github.com`,
+        foto_profil: avatar_url,
+        oauth_provider: 'github' // Wajib ada flag ini [cite: 40]
+      });
+    }
+
+    // fungsi generatetoken
+    const tokens = generateTokens(user);
+    user.refresh_token = tokens.refreshToken;
+    await user.save();
+
+    res.json({ message: "Login GitHub Berhasil", ...tokens, user });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
