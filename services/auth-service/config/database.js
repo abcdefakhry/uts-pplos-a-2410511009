@@ -1,4 +1,3 @@
-// services/auth-service/config/database.js
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
