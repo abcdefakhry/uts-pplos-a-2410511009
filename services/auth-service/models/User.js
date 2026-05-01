@@ -18,14 +18,19 @@ const User = sequelize.define('User', {
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: true // dibuat null karena user OAuth tidak punya password manual
+    allowNull: true
+  },
+  role: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'pencari'
   },
   foto_profil: {
     type: DataTypes.STRING,
     allowNull: true
   },
   oauth_provider: {
-    type: DataTypes.STRING, // isinya nanti github atau null
+    type: DataTypes.STRING,
     allowNull: true
   },
   refresh_token: {

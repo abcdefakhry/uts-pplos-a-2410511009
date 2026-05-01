@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const axios = require('axios');
 
 const generateTokens = (user) => {
-  const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
+  const accessToken = jwt.sign({ id: user.id, role: user.role}, process.env.JWT_SECRET, { expiresIn: '15m' });
   const refreshToken = jwt.sign({ id: user.id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
   return { accessToken, refreshToken };
 };
@@ -13,7 +13,7 @@ exports.register = async (req, res) => {
   try {
     const { nama, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ nama, email, password: hashedPassword });
+    const user = await User.create({ nama, email, password: hashedPassword, role: role || 'user' });
     res.status(201).json({ message: "User berhasil dibuat", user });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -36,7 +36,7 @@ exports.login = async (req, res) => {
     user.refresh_token = tokens.refreshToken;
     await user.save();
 
-    res.json({ ...tokens, user: { id: user.id, nama: user.nama, email: user.email } });
+    res.json({ ...tokens, user: { id: user.id, nama: user.nama, email: user.email, role: user.role} });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
