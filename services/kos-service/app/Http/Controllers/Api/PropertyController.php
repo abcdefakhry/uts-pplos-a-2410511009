@@ -10,20 +10,16 @@ class PropertyController extends Controller
 {
     public function index(Request $request)
     {
-        // menghindari N+1 query
         $query = Property::with(['category', 'owner', 'rooms']);
 
-        // filtering berdasarkan nama
         if ($request->has('search')) {
             $query->where('nama_kos', 'like', '%' . $request->search . '%');
         }
 
-        // filtering berdasarkan kategori
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 
-        // fitur paging dengan default 10 item per halaman
         $perPage = $request->query('per_page', 10);
         $properties = $query->paginate($perPage);
 
@@ -35,7 +31,6 @@ class PropertyController extends Controller
 
     public function store(Request $request)
     {
-        // validasi input
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'owner_id'    => 'required|exists:owners,id',
@@ -51,4 +46,55 @@ class PropertyController extends Controller
             'data' => $property
         ], 201);
     }
+
+    public function show($id)
+    {
+    try {
+        $property = Property::with(['category', 'owner', 'rooms'])->findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $property
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Properti tidak ditemukan'
+        ], 404);
+    }
+}
+
+public function update(Request $request, string $id)
+{
+    $validated = $request->validate([
+        'category_id' => 'sometimes|required|exists:categories,id',
+        'owner_id'    => 'sometimes|required|exists:owners,id',
+        'nama_kos'    => 'sometimes|required|string|max:255',
+        'alamat'      => 'sometimes|required|string',
+        'deskripsi'   => 'sometimes|nullable|string',
+    ]);
+
+    $property = Property::findOrFail($id);
+
+    $property->update($validated);
+
+    return response()->json([
+        'status'  => 'success',
+        'message' => 'Properti berhasil diperbarui',
+        'data'    => $property
+    ], 200);
+}
+
+public function destroy(string $id)
+{
+    $property = Property::findOrFail($id);
+    $property->delete();
+
+    return response()->json([
+        'status'  => 'success',
+        'message' => 'Properti berhasil dihapus'
+    ], 200);
+}
+
 }

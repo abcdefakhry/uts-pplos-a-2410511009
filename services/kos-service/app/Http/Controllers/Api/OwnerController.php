@@ -24,4 +24,35 @@ class OwnerController extends Controller
         if (!$owner) return response()->json(['message' => 'Data tidak ditemukan'], 404);
         return response()->json(['status' => 'success', 'data' => $owner], 200);
     }
+
+    public function update(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'nama_pemilik'   => 'sometimes|required|string|max:255',
+            'nomor_telepon'  => 'sometimes|required|string|max:20',
+            'alamat_pemilik' => 'sometimes|required|string',
+        ]);
+
+        $owner = Owner::findOrFail($id);
+
+        $owner->update($validated);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Data pemilik berhasil diperbarui',
+            'data'    => $owner
+        ], 200);
+    }
+
+    public function destroy(string $id)
+{
+    $owner = Owner::findOrFail($id);
+    $owner->delete();
+
+    return response()->json([
+            'status'  => 'success',
+            'message' => 'Data pemilik berhasil dihapus'
+        ], 200);
+    }
+
 }

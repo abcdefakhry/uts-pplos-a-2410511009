@@ -11,7 +11,7 @@ const generateTokens = (user) => {
 
 exports.register = async (req, res) => {
   try {
-    const { nama, email, password } = req.body;
+    const { nama, email, password, role } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ nama, email, password: hashedPassword, role: role || 'user' });
     res.status(201).json({ message: "User berhasil dibuat", user });
@@ -115,7 +115,7 @@ exports.githubCallback = async (req, res) => {
         nama: login,
         email: email || `${login}@github.com`,
         foto_profil: avatar_url,
-        oauth_provider: 'github' // Wajib ada flag ini [cite: 40]
+        oauth_provider: 'github'
       });
     }
 

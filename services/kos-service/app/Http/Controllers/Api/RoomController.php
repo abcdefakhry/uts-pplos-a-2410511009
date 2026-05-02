@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 class RoomController extends Controller
 {
     public function index() {
-        // Menampilkan semua kamar dengan paging
         $rooms = Room::with('property')->paginate(10);
         return response()->json(['status' => 'success', 'data' => $rooms], 200);
     }
@@ -26,4 +25,53 @@ class RoomController extends Controller
         $room = Room::create($validated);
         return response()->json(['status' => 'success', 'data' => $room], 201);
     }
+
+    public function show($id) {
+        $room = Room::find($id);
+
+        if (!$room) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data kamar tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $room
+        ], 200);
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'property_id'     => 'sometimes|required|exists:properties,id',
+            'nomor_kamar'     => 'sometimes|required|string',
+            'harga_per_bulan' => 'sometimes|required|numeric',
+            'is_available'    => 'sometimes|required|boolean',
+            'fasilitas'       => 'nullable|string'
+        ]);
+
+        $room = Room::findOrFail($id);
+
+        $room->update($validated);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Data kamar berhasil diperbarui',
+            'data'    => $room
+        ], 200);
+    }
+
+    public function destroy(string $id)
+    {
+        $room = Room::findOrFail($id);
+        $room->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Kamar berhasil dihapus'
+        ], 200);
+}
+
 }

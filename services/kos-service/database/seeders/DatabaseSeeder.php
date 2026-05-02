@@ -15,7 +15,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $cat = \App\Models\Category::create(['nama_kategori' => 'Kos Campur']);
+        $cat = \App\Models\Category::firstOrCreate(['nama_kategori' => 'Kos Campur']);
+                \App\Models\Category::firstOrCreate(['nama_kategori' => 'Kos Putra']);
+                \App\Models\Category::firstOrCreate(['nama_kategori' => 'Kos Putri']);
 
         $owner = \App\Models\Owner::create([
             'nama_pemilik' => 'Pak Haji Fakhry',

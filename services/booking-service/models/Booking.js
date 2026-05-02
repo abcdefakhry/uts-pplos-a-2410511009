@@ -6,7 +6,8 @@ const Booking = sequelize.define('Booking', {
   user_id: { type: DataTypes.INTEGER, allowNull: false },
   room_id: { type: DataTypes.INTEGER, allowNull: false },
   tanggal_mulai: { type: DataTypes.DATEONLY, allowNull: false },
-  durasi_bulan: { type: DataTypes.INTEGER, defaultValue: 1 },
+  tanggal_selesai: { type: DataTypes.DATEONLY, allowNull: false },
+  durasi_bulan: { type: DataTypes.FLOAT, defaultValue: 1 },
   total_harga: { type: DataTypes.INTEGER, allowNull: false },
   status: {
     type: DataTypes.ENUM('pending', 'confirmed', 'cancelled'),

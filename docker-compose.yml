@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Database untuk Auth Service
+
   db_auth:
     image: mysql:8.0
     container_name: db_auth
@@ -13,8 +13,9 @@ services:
       - "3306:3306"
     volumes:
       - auth_data:/var/lib/mysql
+    networks:
+      - pplo_network
 
-  # Database untuk Kos Service (MySQL)
   db_kos:
     image: mysql:8.0
     container_name: db_kos
@@ -23,11 +24,12 @@ services:
       MYSQL_DATABASE: db_kos
       MYSQL_ROOT_PASSWORD: password
     ports:
-      - "3307:3306" # Kita bedakan portnya agar tidak bentrok
+      - "3307:3306"
     volumes:
       - kos_data:/var/lib/mysql
+    networks:
+      - pplo_network
 
-  # Database untuk Booking Service
   db_booking:
     image: mysql:8.0
     container_name: db_booking
@@ -39,6 +41,86 @@ services:
       - "3308:3306"
     volumes:
       - booking_data:/var/lib/mysql
+    networks:
+      - pplo_network
+
+  auth-service:
+    build: ./services/auth-service
+    restart: always
+    container_name: auth_service
+    ports:
+      - "5001:5001"
+    environment:
+      - DB_HOST=db_auth
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=db_auth
+      - JWT_SECRET=rahasiabanget
+      - JWT_REFRESH_SECRET=lebihrahasialagi
+    depends_on:
+      - db_auth
+    networks:
+      - pplo_network
+
+  kos-service:
+    build: ./services/kos-service
+    restart: always
+    container_name: kos_service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/kos-service:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db_kos
+      - DB_PORT=3306
+      - DB_DATABASE=db_kos
+      - DB_USERNAME=root
+      - DB_PASSWORD=password
+      - JWT_SECRET=rahasiabanget
+      - JWT_REFRESH_SECRET=lebihrahasialagi
+    depends_on:
+      - db_kos
+    networks:
+      - pplo_network
+
+  booking-service:
+    build: ./services/booking-service
+    restart: always
+    container_name: booking-service
+    ports:
+      - "5002:5002"
+    environment:
+      - DB_HOST=db_booking
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=db_booking
+      - JWT_SECRET=rahasiabanget
+      - JWT_REFRESH_SECRET=lebihrahasialagi
+    depends_on:
+      - db_booking
+    networks:
+      - pplo_network
+
+  gateway:
+    build: ./gateway
+    restart: always
+    container_name: gateway
+    ports:
+      - "4000:4000"
+    environment:
+      - JWT_SECRET=rahasiabanget
+      - JWT_REFRESH_SECRET=lebihrasialagi
+    depends_on:
+      - auth-service
+      - kos-service
+      - booking-service
+    networks:
+      - pplo_network
+
+networks:
+  pplo_network:
+    driver: bridge
 
 volumes:
   auth_data:
