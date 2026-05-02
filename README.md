@@ -96,8 +96,8 @@ Semua endpoint diakses melalui `http://localhost:4000`.
 | PUT | `/bookings/:id/status` | ✓ |
 | DELETE | `/bookings/:id` | ✓ |
 
-## Demo Video
+## Video
 
-[Demo Video](TBA)
+#### Link : https://youtu.be/qr4wzo26gxA?si=Sruj6DGM0DOUeNot
 
 
